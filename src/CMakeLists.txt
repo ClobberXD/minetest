@@ -5,6 +5,9 @@ project(minetest)
 INCLUDE(CheckIncludeFiles)
 INCLUDE(CheckLibraryExists)
 
+# Include add_pch.cmake from IrrlichtBAW to simplify setup of pre-compiled headers
+INCLUDE(${CMAKE_CURRENT_SOURCE_DIR}/../add_pch.cmake)
+
 # Add custom SemiDebug build mode
 set(CMAKE_CXX_FLAGS_SEMIDEBUG "-O1 -g -Wall -Wabi" CACHE STRING
 	"Flags used by the C++ compiler during semidebug builds."
@@ -338,6 +341,9 @@ add_custom_target(GenerateVersion
 	-D "DEVELOPMENT_BUILD=${DEVELOPMENT_BUILD}"
 	-P "${CMAKE_SOURCE_DIR}/cmake/Modules/GenerateVersion.cmake"
 	WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}")
+
+
+add_precompiled_header(${PROJECT_NAME} pch.h)
 
 
 add_subdirectory(threading)
@@ -724,7 +730,7 @@ if(WIN32)
 	if(VCPKG_APPLOCAL_DEPS)
 		# Collect the dll's from the output path
 		install(DIRECTORY ${EXECUTABLE_OUTPUT_PATH}/Release/
-				DESTINATION ${BINDIR} 
+				DESTINATION ${BINDIR}
 				CONFIGURATIONS Release
 				FILES_MATCHING PATTERN "*.dll")
 		install(DIRECTORY ${EXECUTABLE_OUTPUT_PATH}/Debug/
