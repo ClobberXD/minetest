@@ -304,9 +304,7 @@ bool GUIKeyChangeMenu::OnEvent(const SEvent& event)
 		bool prefer_character = shift_down;
 		KeyPress kp(event.KeyInput, prefer_character);
 
-		if (event.KeyInput.Key == irr::KEY_BACK ||
-				event.KeyInput.Key == irr::KEY_ESCAPE ||
-				event.KeyInput.Key == irr::KEY_DELETE)
+		if (event.KeyInput.Key == irr::KEY_ESCAPE)
 			kp = KeyPress(""); // To erase key settings
 
 		bool shift_went_down = false;
