@@ -1,10 +1,39 @@
-uniform mat4 mWorldViewProj;
-uniform mat4 mWorld;
+/******************************************************************************/
+/*
+ * Uniforms
+ */
+
+uniform mat4 u_WorldViewProj;
+uniform mat4 u_World;
+
+uniform u_Drawtype;
+uniform u_MaterialType;
+uniform u_UseNormalmaps;
+uniform u_GenerateNormalmaps;
+uniform u_NormalmapsStrength;
+uniform u_NormalmapsSmooth;
+uniform u_EnableBumpmapping;
+uniform u_EnableParallaxOcclusion;
+uniform u_ParallaxOcclusionMode;
+uniform u_ParallaxOcclusionScale;
+uniform u_ParallaxOcclusionBias;
+uniform u_ParallaxOcclusionIterations;
+uniform u_EnableWavingLiquids;
+uniform u_LiquidWaveHeight;
+uniform u_LiquidWaveLength;
+uniform u_LiquidWaveSpeed;
+uniform u_EnableWavingLeaves;
+uniform u_EnableWavingPlants;
+uniform u_EnableTonemapping;
+uniform u_FogStart;
 
 // Color of the light emitted by the sun.
 uniform vec3 dayLight;
+
 uniform vec3 eyePosition;
 uniform float animationTimer;
+
+/******************************************************************************/
 
 varying vec3 vPosition;
 varying vec3 worldPosition;
@@ -130,15 +159,15 @@ float disp_z;
 	vec4 color;
 	// The alpha gives the ratio of sunlight in the incoming light.
 	float nightRatio = 1 - gl_Color.a;
-	color.rgb = gl_Color.rgb * (gl_Color.a * dayLight.rgb + 
+	color.rgb = gl_Color.rgb * (gl_Color.a * dayLight.rgb +
 		nightRatio * artificialLight.rgb) * 2;
 	color.a = 1;
-	
+
 	// Emphase blue a bit in darker places
 	// See C++ implementation in mapblock_mesh.cpp final_color_blend()
 	float brightness = (color.r + color.g + color.b) / 3;
 	color.b += max(0.0, 0.021 - abs(0.2 * brightness - 0.021) +
 		0.07 * brightness);
-	
+
 	gl_FrontColor = gl_BackColor = clamp(color, 0.0, 1.0);
 }

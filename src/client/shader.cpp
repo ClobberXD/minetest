@@ -210,15 +210,71 @@ class MainShaderConstantSetter : public IShaderConstantSetter
 	CachedVertexShaderSetting<float, 16> m_world_view_proj;
 	CachedVertexShaderSetting<float, 16> m_world;
 
+	// Drawtype and material type
+	CachedVertexShaderSetting<int> m_drawtype;
+	CachedVertexShaderSetting<int> m_material_type;
+
+	// Normalmaps
+	CachedVertexShaderSetting<bool> m_use_normalmaps;
+	CachedVertexShaderSetting<bool> m_generate_normalmaps;
+	CachedVertexShaderSetting<float> m_normalmaps_strength;
+	CachedVertexShaderSetting<float> m_normalmaps_smooth;
+
+	// Bumpmapping
+	CachedVertexShaderSetting<bool> m_enable_bumpmapping;
+
+	// Parallax Occlusion
+	CachedVertexShaderSetting<bool> m_enable_parallax_occlusion;
+	CachedVertexShaderSetting<int> m_parallax_occlusion_mode;
+	CachedVertexShaderSetting<float> m_parallax_occlusion_scale;
+	CachedVertexShaderSetting<float> m_parallax_occlusion_bias;
+	CachedVertexShaderSetting<int> m_parallax_occlusion_iterations;
+
+	// Waving liquids
+	CachedVertexShaderSetting<bool> m_enable_waving_liquids;
+	CachedVertexShaderSetting<float> m_liquid_wave_height;
+	CachedVertexShaderSetting<float> m_liquid_wave_length;
+	CachedVertexShaderSetting<float> m_liquid_wave_speed;
+
+	// Waving leaves and plants
+	CachedVertexShaderSetting<bool> m_enable_waving_leaves;
+	CachedVertexShaderSetting<bool> m_enable_waving_plants;
+
+	// Tone mapping
+	CachedVertexShaderSetting<bool> m_enable_tonemapping;
+
+	// Fog start
+	CachedVertexShaderSetting<float> m_fog_start;
+
 public:
 	MainShaderConstantSetter() :
-		m_world_view_proj("mWorldViewProj"),
-		m_world("mWorld")
+		m_world_view_proj("u_WorldViewProj"),
+		m_world("u_World"),
+		m_drawtype("u_Drawtype"),
+		m_material_type("u_MaterialType"),
+		m_use_normalmaps("u_UseNormalmaps"),
+		m_generate_normalmaps("u_GenerateNormalmaps"),
+		m_normalmaps_strength("u_NormalmapsStrength"),
+		m_normalmaps_smooth("u_NormalmapsSmooth"),
+		m_enable_bumpmapping("u_EnableBumpmapping"),
+		m_enable_parallax_occlusion("u_EnableParallaxOcclusion"),
+		m_parallax_occlusion_mode("u_ParallaxOcclusionMode"),
+		m_parallax_occlusion_scale("u_ParallaxOcclusionScale"),
+		m_parallax_occlusion_bias("u_ParallaxOcclusionBias"),
+		m_parallax_occlusion_iterations("u_ParallaxOcclusionIterations"),
+		m_enable_waving_liquids("u_EnableWavingLiquids"),
+		m_liquid_wave_height("u_LiquidWaveHeight"),
+		m_liquid_wave_length("u_LiquidWaveLength"),
+		m_liquid_wave_speed("u_LiquidWaveSpeed"),
+		m_enable_waving_leaves("u_EnableWavingLeaves"),
+		m_enable_waving_plants("u_EnableWavingPlants"),
+		m_enable_tonemapping("u_EnableTonemapping"),
+		m_fog_start("u_FogStart")
 	{}
 	~MainShaderConstantSetter() = default;
 
 	virtual void onSetConstants(video::IMaterialRendererServices *services,
-			bool is_highlevel)
+		bool is_highlevel)
 	{
 		video::IVideoDriver *driver = services->getVideoDriver();
 		sanity_check(driver);
@@ -241,6 +297,76 @@ public:
 			m_world.set(*reinterpret_cast<float(*)[16]>(world.pointer()), services);
 		else
 			services->setVertexShaderConstant(world.pointer(), 4, 4);
+
+		/*
+		 * Drawtype and material
+		 */
+
+		m_drawtype.set();
+		m_material_type.set();
+
+		/*
+		 * Normalmaps
+		 */
+
+		const bool use_normalmaps = g_settings->getBool("use_normalmaps");
+		m_use_normalmaps.set(&use_normalmaps, services);
+
+		const bool generate_normalmaps = g_settings->getBool("generate_normalmaps");
+		m_generate_normalmaps.set(&generate_normalmaps, services);
+
+		const float normalmaps_strength = g_settings->getFloat("normalmaps_strength");
+		m_normalmaps_strength.set(&normalmaps_strength, services);
+
+		const float normalmaps_smooth = (float)g_settings->getU16("normalmaps_smooth");
+		m_normalmaps_smooth.set(&normalmaps_smooth, services);
+
+		/*
+		 * Bumpmapping
+		 */
+
+		const bool enable_bumpmapping = g_settings->getBool("enable_bumpmapping");
+		m_enable_bumpmapping.set(&enable_bumpmapping, services);
+
+		/*
+		 * Parallax occlusion
+		 */
+
+		m_enable_parallax_occlusion.set();
+		m_parallax_occlusion_mode.set();
+		m_parallax_occlusion_scale.set();
+		m_parallax_occlusion_bias.set();
+		m_parallax_occlusion_iterations.set();
+
+		/*
+		 * Waving liquids
+		 */
+
+		m_enable_waving_liquids.set();
+		m_liquid_wave_height.set();
+		m_liquid_wave_length.set();
+		m_liquid_wave_speed.set();
+
+		/*
+		 * Waving leaves and plants
+		 */
+
+		m_enable_waving_leaves.set();
+		m_enable_waving_plants.set();
+
+		/*
+		 * Tonemapping
+		 */
+
+		const bool enable_tonemapping = g_settings->getBool("enable_tonemapping");
+		m_enable_tonemapping.set(&enable_tonemapping, services);
+
+		/*
+		 * Fog start
+		 */
+
+		const float fog_start = g_settings->getFloat("fog_start");
+		m_fog_start.set(&fog_start, services);
 	}
 };
 
@@ -582,9 +708,6 @@ ShaderInfo generate_shader(const std::string &name, u8 material_type, u8 drawtyp
 	if (vertex_program.empty() && pixel_program.empty() && geometry_program.empty())
 		return shaderinfo;
 
-	// Create shaders header
-	std::string shaders_header = "#version 120\n";
-
 	static const char *drawTypes[] = {
 		"NDT_NORMAL",
 		"NDT_AIRLIKE",
@@ -641,13 +764,13 @@ ShaderInfo generate_shader(const std::string &name, u8 material_type, u8 drawtyp
 	shaders_header += itos(drawtype);
 	shaders_header += "\n";
 
-	if (g_settings->getBool("generate_normalmaps")) {
+	if () {
 		shaders_header += "#define GENERATE_NORMALMAPS 1\n";
 	} else {
 		shaders_header += "#define GENERATE_NORMALMAPS 0\n";
 	}
 	shaders_header += "#define NORMALMAPS_STRENGTH ";
-	shaders_header += ftos(g_settings->getFloat("normalmaps_strength"));
+	shaders_header += ftos();
 	shaders_header += "\n";
 	float sample_step;
 	int smooth = (int)g_settings->getFloat("normalmaps_smooth");
@@ -731,6 +854,9 @@ ShaderInfo generate_shader(const std::string &name, u8 material_type, u8 drawtyp
 	shaders_header += "#define FOG_START ";
 	shaders_header += ftos(rangelim(g_settings->getFloat("fog_start"), 0.0f, 0.99f));
 	shaders_header += "\n";
+
+	// Create shaders header
+	std::string shaders_header = "#version 120\n";
 
 	// Call addHighLevelShaderMaterial() or addShaderMaterial()
 	const c8 *vertex_program_ptr = 0;
