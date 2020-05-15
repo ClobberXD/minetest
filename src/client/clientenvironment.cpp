@@ -262,14 +262,18 @@ void ClientEnvironment::step(float dtime)
 	bool player_immortal = lplayer->getCAO() && lplayer->getCAO()->isImmortal();
 
 	for (const CollisionInfo &info : player_collisions) {
-		v3f speed_diff = info.new_speed - info.old_speed;;
-		// Handle only fall damage
-		// (because otherwise walking against something in fast_move kills you)
-		if (speed_diff.Y < 0 || info.old_speed.Y >= 0)
-			continue;
-		// Get rid of other components
-		speed_diff.X = 0;
-		speed_diff.Z = 0;
+		v3f speed_diff = info.new_speed - info.old_speed;
+
+		// Handle only fall damage when fast_move is enabled
+		// (because walking against something in fast_move kills you)
+		if (lplayer->getPlayerSettings().fast_move) {
+			if (speed_diff.Y < 0 || info.old_speed.Y >= 0)
+				continue;
+
+			// Get rid of other components
+			speed_diff.X = 0;
+			speed_diff.Z = 0;
+		}
 		f32 pre_factor = 1; // 1 hp per node/s
 		f32 tolerance = BS*14; // 5 without damage
 		f32 post_factor = 1; // 1 hp per node/s
